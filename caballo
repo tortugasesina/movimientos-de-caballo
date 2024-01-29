@@ -1,0 +1,164 @@
+#include<iostream>
+#include<array>
+#include<iomanip>
+using namespace std;
+
+const array<int, 8> mov_horizontal = { 2, 1, -1, -2, -2, -1, 1, 2 };
+const array<int, 8> mov_vertical = { -1, -2, -2, -1, 1, 2, 2, 1 };
+
+/*** array<array<columnas>, filas>    array<array<vertical>, horizontal> ***/
+static array<array<int, 8>, 8> tablero = {};
+
+static array<array<int, 8>, 8> heuristica = {  2,3,4,4,4,4,3,2,
+                                              {3,4,6,6,6,6,4,3},
+                                              {4,6,8,8,8,8,6,4},
+                                              {4,6,8,8,8,8,6,4},
+                                              {4,6,8,8,8,8,6,4},
+                                              {4,6,8,8,8,8,6,4},
+                                              {3,4,6,6,6,6,4,3},
+                                              {2,3,4,4,4,4,3,2} };
+
+bool validar_memoria(int, int);
+int movimientos_posibles(int, int);
+void marcando(int, int, int);
+void ver_tablero();
+bool validar_casilla(int, int);
+//int accesibilidad(int, int);
+
+int main()
+{
+    int mov_tipo;
+    int N_mov = 1;
+    bool condicion;
+    int pos_actual_horizontal;
+    int pos_actual_vertical;
+
+    cout << "Ingresa la fila horizontal inicial: "; cin >> pos_actual_horizontal;
+    cout << endl;
+    cout << "Ingresa la fila vertical inicial: "; cin >> pos_actual_vertical;
+    cout << endl << endl;
+
+    do
+    {
+        marcando(pos_actual_horizontal, pos_actual_vertical, N_mov);
+        mov_tipo = movimientos_posibles(pos_actual_horizontal, pos_actual_vertical);
+        /*
+            con el siguiete if resivios cuando ya no hay movimientos posibles
+            y cerramos el programa
+        */
+        if (mov_tipo >= 0)
+        {
+            pos_actual_horizontal += mov_horizontal[mov_tipo];
+            pos_actual_vertical += mov_vertical[mov_tipo];
+            N_mov++;
+        }
+    } while (mov_tipo != -1);
+
+    cout << "El numero maximo de movimientos posibles partiendo de las casillas dadas es: ";
+    cout << N_mov << endl << endl;
+
+    ver_tablero();
+
+    cout << endl;
+    for (auto filas : heuristica)
+    {
+        for (int casilla : filas)
+        {
+            cout << setw(2) << casilla << "  ";
+        }
+        cout << endl;
+    }
+
+
+    return 0;
+}
+
+bool validar_memoria(int horizontal, int vertical)
+{
+
+    if (horizontal >= 0 && horizontal < 8)
+    {
+        if (vertical >= 0 && vertical < 8) return true;
+    }
+
+    return false;
+}
+
+int movimientos_posibles(int horizontal, int vertical)
+{
+    int movimiento = -1; // capturamos el mejor movimiento, ocupamos el -1 como vandera para saber cuando terminar el bucle --do while--
+    int horizontal_siguiente;
+    int vertical_siguiente;
+    int acces = 8;
+
+    /*En este for iteramos por todos los movimientos posibles*/
+
+    for (int movimiento_tipo = 0; movimiento_tipo < 8; movimiento_tipo++)
+    {
+        horizontal_siguiente = horizontal + mov_horizontal[movimiento_tipo];
+        vertical_siguiente = vertical + mov_vertical[movimiento_tipo];
+
+        if (validar_memoria(horizontal_siguiente, vertical_siguiente) && validar_casilla(horizontal_siguiente, vertical_siguiente) && heuristica[vertical_siguiente][horizontal_siguiente] <= acces)
+        {
+            movimiento = movimiento_tipo;
+            acces = heuristica[vertical_siguiente][horizontal + mov_horizontal[movimiento]];
+        }
+    }
+
+    heuristica[vertical + mov_vertical[movimiento]][horizontal + mov_horizontal[movimiento]]--;
+    
+    return movimiento;
+}
+
+/*Al momento de marcar el primer corchete accede a los arreglos el segundo a el contenido
+  lo que viene siendo  vertical = arreglos, horizontal = columnas por eso el orden
+  de tablero[pos_vertic][pos_horizon] */
+
+void marcando(int pos_horizon, int pos_vertic, int N_mov)
+{
+    tablero[pos_vertic][pos_horizon] = N_mov;
+}
+
+void ver_tablero()
+{
+    for (auto filas : tablero)
+    {
+        for (int casilla : filas)
+        {
+            cout << setw(2) << casilla << "  ";
+        }
+        cout << endl;
+    }
+}
+
+bool validar_casilla(int horizontal, int vertical)
+{
+    if (tablero[vertical][horizontal] == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+/*
+
+int accesibilidad(int horizontal, int vertical)
+{
+    int aux_horizontal, aux_vertical;
+    int acces = 8; //accesibilidad
+    int movimiento;
+
+    for (int i = 0; i < 8; i++) //i hace referencia a el tipo de movimiento, 8 = total de movimientos 
+    {
+        aux_horizontal = horizontal + mov_horizontal[i];
+        aux_vertical = vertical + mov_vertical[i];
+
+        if (validar_casilla(aux_horizontal,aux_vertical) && validar_memoria(aux_horizontal,aux_vertical) && heuristica[aux_vertical][aux_horizontal] <= acces)
+        {
+            movimiento = i;
+            acces = heuristica[aux_vertical][aux_horizontal];
+        }
+    }
+    return movimiento;
+}
+*/
